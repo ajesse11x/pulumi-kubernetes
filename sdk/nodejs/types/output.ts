@@ -8038,6 +8038,60 @@ export namespace autoscaling {
     }
 
     /**
+     * HPAScalingPolicy is a single policy which must hold true for a specified past interval.
+     */
+    export interface HPAScalingPolicy {
+      /**
+       * PeriodSeconds specifies the window of time for which the policy should hold true.
+       * PeriodSeconds must be greater than zero and less than or equal to 1800 (30 min).
+       */
+      readonly periodSeconds: number
+
+      /**
+       * Type is used to specify the scaling policy.
+       */
+      readonly type: string
+
+      /**
+       * Value contains the amount of change which is permitted by the policy. It must be greater
+       * than zero
+       */
+      readonly value: number
+
+    }
+
+    /**
+     * HPAScalingRules configures the scaling behavior for one direction. These Rules are applied
+     * after calculating DesiredReplicas from metrics for the HPA. They can limit the scaling
+     * velocity by specifying scaling policies. They can prevent flapping by specifying the
+     * stabilization window, so that the number of replicas is not set instantly, instead, the
+     * safest value from the stabilization window is chosen.
+     */
+    export interface HPAScalingRules {
+      /**
+       * policies is a list of potential scaling polices which can be used during scaling. At least
+       * one policy must be specified, otherwise the HPAScalingRules will be discarded as invalid
+       */
+      readonly policies: autoscaling.v2beta2.HPAScalingPolicy[]
+
+      /**
+       * selectPolicy is used to specify which policy should be used. If not set, the default value
+       * MaxPolicySelect is used.
+       */
+      readonly selectPolicy: string
+
+      /**
+       * StabilizationWindowSeconds is the number of seconds for which past recommendations should
+       * be considered while scaling up or scaling down. StabilizationWindowSeconds must be greater
+       * than or equal to zero and less than or equal to 3600 (one hour). If not set, use the
+       * default values: - For scale up: 0 (i.e. no stabilization is done). - For scale down: 300
+       * (i.e. the stabilization window is 300 seconds long).
+       */
+      readonly stabilizationWindowSeconds: number
+
+    }
+
+    /**
      * HorizontalPodAutoscaler is the configuration for a horizontal pod autoscaler, which
      * automatically manages the replica count of any resource implementing the scale subresource
      * based on the metrics specified.
@@ -8075,6 +8129,28 @@ export namespace autoscaling {
        * status is the current information about the autoscaler.
        */
       readonly status: autoscaling.v2beta2.HorizontalPodAutoscalerStatus
+
+    }
+
+    /**
+     * HorizontalPodAutoscalerBehavior configures the scaling behavior of the target in both Up and
+     * Down directions (scaleUp and scaleDown fields respectively).
+     */
+    export interface HorizontalPodAutoscalerBehavior {
+      /**
+       * scaleDown is scaling policy for scaling Down. If not set, the default value is to allow to
+       * scale down to minReplicas pods, with a 300 second stabilization window (i.e., the highest
+       * recommendation for the last 300sec is used).
+       */
+      readonly scaleDown: autoscaling.v2beta2.HPAScalingRules
+
+      /**
+       * scaleUp is scaling policy for scaling Up. If not set, the default value is the higher of:
+       *   * increase no more than 4 pods per 60 seconds
+       *   * double the number of pods per 60 seconds
+       * No stabilization is used.
+       */
+      readonly scaleUp: autoscaling.v2beta2.HPAScalingRules
 
     }
 
@@ -8147,6 +8223,13 @@ export namespace autoscaling {
      * HorizontalPodAutoscaler.
      */
     export interface HorizontalPodAutoscalerSpec {
+      /**
+       * behavior configures the scaling behavior of the target in both Up and Down directions
+       * (scaleUp and scaleDown fields respectively). If not set, the default HPAScalingRules for
+       * scale up and scale down are used.
+       */
+      readonly behavior: autoscaling.v2beta2.HorizontalPodAutoscalerBehavior
+
       /**
        * maxReplicas is the upper limit for the number of replicas to which the autoscaler can scale
        * up. It cannot be less that minReplicas.
@@ -10001,6 +10084,14 @@ export namespace core {
       readonly data: {[key: string]: string}
 
       /**
+       * Immutable, if set to true, ensures that data stored in the ConfigMap cannot be updated
+       * (only object metadata can be modified). If not set to true, the field can be modified at
+       * any time. Defaulted to nil. This is an alpha field enabled by ImmutableEphemeralVolumes
+       * feature gate.
+       */
+      readonly immutable: boolean
+
+      /**
        * Kind is a string value representing the REST resource this object represents. Servers may
        * infer this from the endpoint the client submits requests to. Cannot be updated. In
        * CamelCase. More info:
@@ -10306,8 +10397,8 @@ export namespace core {
        * probes are executed until this completes successfully. If this probe fails, the Pod will be
        * restarted, just as if the livenessProbe failed. This can be used to provide different probe
        * parameters at the beginning of a Pod's lifecycle, when it might take a long time to load
-       * data or warm a cache, than during steady-state operation. This cannot be updated. This is
-       * an alpha feature enabled by the StartupProbe feature flag. More info:
+       * data or warm a cache, than during steady-state operation. This cannot be updated. This is a
+       * beta feature enabled by the StartupProbe feature flag. More info:
        * https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
        */
       readonly startupProbe: core.v1.Probe
@@ -10705,6 +10796,15 @@ export namespace core {
      * EndpointPort is a tuple that describes a single port.
      */
     export interface EndpointPort {
+      /**
+       * The application protocol for this port. This field follows standard Kubernetes label
+       * syntax. Un-prefixed names are reserved for IANA standard service names (as per RFC-6335 and
+       * http://www.iana.org/assignments/service-names). Non-standard protocols should use prefixed
+       * names such as mycompany.com/my-custom-protocol. Field can be enabled with
+       * ServiceAppProtocol feature gate.
+       */
+      readonly appProtocol: string
+
       /**
        * The name of this port.  This must match the 'name' field in the corresponding ServicePort.
        * Must be a DNS_LABEL. Optional only if one port is defined.
@@ -13773,7 +13873,7 @@ export namespace core {
       /**
        * TopologySpreadConstraints describes how a group of pods ought to spread across topology
        * domains. Scheduler will schedule pods in a way which abides by the constraints. This field
-       * is alpha-level and is only honored by clusters that enables the EvenPodsSpread feature. All
+       * is only honored by clusters that enable the EvenPodsSpread feature. All
        * topologySpreadConstraints are ANDed.
        */
       readonly topologySpreadConstraints: core.v1.TopologySpreadConstraint[]
@@ -14795,6 +14895,14 @@ export namespace core {
       readonly data: object
 
       /**
+       * Immutable, if set to true, ensures that data stored in the Secret cannot be updated (only
+       * object metadata can be modified). If not set to true, the field can be modified at any
+       * time. Defaulted to nil. This is an alpha field enabled by ImmutableEphemeralVolumes feature
+       * gate.
+       */
+      readonly immutable: boolean
+
+      /**
        * Kind is a string value representing the REST resource this object represents. Servers may
        * infer this from the endpoint the client submits requests to. Cannot be updated. In
        * CamelCase. More info:
@@ -15258,6 +15366,15 @@ export namespace core {
      * ServicePort contains information on service's port.
      */
     export interface ServicePort {
+      /**
+       * The application protocol for this port. This field follows standard Kubernetes label
+       * syntax. Un-prefixed names are reserved for IANA standard service names (as per RFC-6335 and
+       * http://www.iana.org/assignments/service-names). Non-standard protocols should use prefixed
+       * names such as mycompany.com/my-custom-protocol. Field can be enabled with
+       * ServiceAppProtocol feature gate.
+       */
+      readonly appProtocol: string
+
       /**
        * The name of this port within the service. This must be a DNS_LABEL. All ports within a
        * ServiceSpec must have unique names. When considering the endpoints for a Service, this must
@@ -16077,8 +16194,7 @@ export namespace core {
        * The UserName in Windows to run the entrypoint of the container process. Defaults to the
        * user specified in image metadata if unspecified. May also be set in PodSecurityContext. If
        * set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext
-       * takes precedence. This field is beta-level and may be disabled with the
-       * WindowsRunAsUserName feature flag.
+       * takes precedence.
        */
       readonly runAsUserName: string
 
@@ -16158,7 +16274,7 @@ export namespace discovery {
        * The application protocol for this port. This field follows standard Kubernetes label
        * syntax. Un-prefixed names are reserved for IANA standard service names (as per RFC-6335 and
        * http://www.iana.org/assignments/service-names). Non-standard protocols should use prefixed
-       * names. Default is empty string.
+       * names such as mycompany.com/my-custom-protocol.
        */
       readonly appProtocol: string
 
@@ -18289,8 +18405,8 @@ export namespace flowcontrol {
       /**
        * `matchingPrecedence` is used to choose among the FlowSchemas that match a given request.
        * The chosen FlowSchema is among those with the numerically lowest (which we take to be
-       * logically highest) MatchingPrecedence.  Each MatchingPrecedence value must be non-negative.
-       * Note that if the precedence is not specified or zero, it will be set to 1000 as default.
+       * logically highest) MatchingPrecedence.  Each MatchingPrecedence value must be ranged in
+       * [1,10000]. Note that if the precedence is not specified, it will be set to 1000 as default.
        */
       readonly matchingPrecedence: number
 
@@ -19559,19 +19675,21 @@ export namespace meta {
 export namespace networking {
   export namespace v1 {
     /**
-     * IPBlock describes a particular CIDR (Ex. "192.168.1.1/24") that is allowed to the pods
-     * matched by a NetworkPolicySpec's podSelector. The except entry describes CIDRs that should
-     * not be included within this rule.
+     * IPBlock describes a particular CIDR (Ex. "192.168.1.1/24","2001:db9::/64") that is allowed to
+     * the pods matched by a NetworkPolicySpec's podSelector. The except entry describes CIDRs that
+     * should not be included within this rule.
      */
     export interface IPBlock {
       /**
-       * CIDR is a string representing the IP Block Valid examples are "192.168.1.1/24"
+       * CIDR is a string representing the IP Block Valid examples are "192.168.1.1/24" or
+       * "2001:db9::/64"
        */
       readonly cidr: string
 
       /**
        * Except is a slice of CIDRs that should not be included within an IP Block Valid examples
-       * are "192.168.1.1/24" Except values will be rejected if they are outside the CIDR range
+       * are "192.168.1.1/24" or "2001:db9::/64" Except values will be rejected if they are outside
+       * the CIDR range
        */
       readonly except: string[]
 
@@ -20582,9 +20700,8 @@ export namespace policy {
       readonly expectedPods: number
 
       /**
-       * Most recent generation observed when updating this PDB status. PodDisruptionsAllowed and
-       * other status information is valid only if observedGeneration equals to PDB's object
-       * generation.
+       * Most recent generation observed when updating this PDB status. DisruptionsAllowed and other
+       * status information is valid only if observedGeneration equals to PDB's object generation.
        */
       readonly observedGeneration: number
 
@@ -21484,11 +21601,10 @@ export namespace rbac {
 
       /**
        * NonResourceURLs is a set of partial urls that a user should have access to.  *s are
-       * allowed, but only as the full, final step in the path This name is intentionally different
-       * than the internal type so that the DefaultConvert works nicely and because the ordering may
-       * be different. Since non-resource URLs are not namespaced, this field is only applicable for
-       * ClusterRoles referenced from a ClusterRoleBinding. Rules can either apply to API resources
-       * (such as "pods" or "secrets") or non-resource URL paths (such as "/api"),  but not both.
+       * allowed, but only as the full, final step in the path Since non-resource URLs are not
+       * namespaced, this field is only applicable for ClusterRoles referenced from a
+       * ClusterRoleBinding. Rules can either apply to API resources (such as "pods" or "secrets")
+       * or non-resource URL paths (such as "/api"),  but not both.
        */
       readonly nonResourceURLs: string[]
 
