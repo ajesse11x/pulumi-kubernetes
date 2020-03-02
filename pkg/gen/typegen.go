@@ -832,17 +832,17 @@ func makeSchemaTypeSpec(resourceType, propName string, prop map[string]interface
 		return pschema.TypeSpec{Type: "string"}
 	case v1beta1JSONSchemaPropsOrBool:
 		return pschema.TypeSpec{OneOf: []pschema.TypeSpec{
-			{Ref: "#/types/kubernetes:apiextensions/v1beta1/JSONSchemaProps:JSONSchemaProps"},
+			{Ref: "#/types/kubernetes:apiextensions/v1beta1:JSONSchemaProps"},
 			{Type: "boolean"},
 		}}
 	case v1JSONSchemaPropsOrBool:
 		return pschema.TypeSpec{OneOf: []pschema.TypeSpec{
-			{Ref: "#/types/kubernetes:apiextensions/v1/JSONSchemaProps:JSONSchemaProps"},
+			{Ref: "#/types/kubernetes:apiextensions/v1:JSONSchemaProps"},
 			{Type: "boolean"},
 		}}
 	case v1beta1JSONSchemaPropsOrArray:
 		return pschema.TypeSpec{OneOf: []pschema.TypeSpec{
-			{Ref: "#/types/kubernetes:apiextensions/v1beta1/JSONSchemaProps:JSONSchemaProps"},
+			{Ref: "#/types/kubernetes:apiextensions/v1beta1:JSONSchemaProps"},
 			{
 				Type:  "array",
 				Items: &pschema.TypeSpec{Ref: "pulumi.json#/Any"},
@@ -850,7 +850,7 @@ func makeSchemaTypeSpec(resourceType, propName string, prop map[string]interface
 		}}
 	case v1JSONSchemaPropsOrArray:
 		return pschema.TypeSpec{OneOf: []pschema.TypeSpec{
-			{Ref: "#/types/kubernetes:apiextensions/v1/JSONSchemaProps:JSONSchemaProps"},
+			{Ref: "#/types/kubernetes:apiextensions/v1:JSONSchemaProps"},
 			{
 				Type:  "array",
 				Items: &pschema.TypeSpec{Ref: "pulumi.json#/Any"},
