@@ -2,6 +2,7 @@
 
 ### Bug fixes
 
+-   Change URN for apiregistration resources. (https://github.com/pulumi/pulumi-kubernetes/pull/1021).
 -   Replace PersistentVolume if volume source changes. (https://github.com/pulumi/pulumi-kubernetes/pull/1015).
 
 ## 1.5.6 (February 28, 2020)

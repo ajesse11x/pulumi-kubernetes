@@ -46,12 +46,12 @@ namespace Pulumi.Kubernetes.ApiRegistration.V1Beta1
         /// <param name="args">The arguments used to populate this resource's properties</param>
         /// <param name="options">A bag of options that control this resource's behavior</param>
         public APIServiceList(string name, Types.Inputs.ApiRegistration.V1Beta1.APIServiceListArgs? args = null, CustomResourceOptions? options = null)
-            : base("kubernetes:apiregistration/v1beta1:APIServiceList", name, SetAPIKindAndVersion(args), options)
+            : base("kubernetes:apiregistration.k8s.io/v1beta1:APIServiceList", name, SetAPIKindAndVersion(args), options)
         {
         }
 
         internal APIServiceList(string name, ImmutableDictionary<string, object?> dictionary, CustomResourceOptions? options = null)
-            : base("kubernetes:apiregistration/v1beta1:APIServiceList", name, dictionary, options)
+            : base("kubernetes:apiregistration.k8s.io/v1beta1:APIServiceList", name, dictionary, options)
         {
         }
 
