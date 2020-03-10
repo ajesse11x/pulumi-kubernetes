@@ -2196,6 +2196,9 @@ namespace Pulumi.Kubernetes.Types.Outputs.ApiExtensions
         /// This tag MUST only be used on lists that have the "x-kubernetes-list-type" extension set
         /// to "map". Also, the values specified for this attribute must be a scalar typed field of
         /// the child structure (no nesting is supported).
+        /// 
+        /// The properties specified must either be required or have a default value, to ensure
+        /// those properties are present for all list items.
         /// </summary>
       public readonly ImmutableArray<string> X_kubernetes_list_map_keys;
 
@@ -3302,6 +3305,9 @@ namespace Pulumi.Kubernetes.Types.Outputs.ApiExtensions
         /// This tag MUST only be used on lists that have the "x-kubernetes-list-type" extension set
         /// to "map". Also, the values specified for this attribute must be a scalar typed field of
         /// the child structure (no nesting is supported).
+        /// 
+        /// The properties specified must either be required or have a default value, to ensure
+        /// those properties are present for all list items.
         /// </summary>
       public readonly ImmutableArray<string> X_kubernetes_list_map_keys;
 
@@ -13143,6 +13149,19 @@ namespace Pulumi.Kubernetes.Types.Outputs.Certificates
       public readonly string Request;
 
       /// <summary>
+        /// Requested signer for the request. It is a qualified name in the form:
+        /// `scope-hostname.io/name`. If empty, it will be defaulted:
+        ///  1. If it's a kubelet client certificate, it is assigned
+        ///     "kubernetes.io/kube-apiserver-client-kubelet".
+        ///  2. If it's a kubelet serving certificate, it is assigned
+        ///     "kubernetes.io/kubelet-serving".
+        ///  3. Otherwise, it is assigned "kubernetes.io/legacy-unknown".
+        /// Distribution of trust for signers happens out of band. You can select on this field
+        /// using `spec.signerName`.
+        /// </summary>
+      public readonly string SignerName;
+
+      /// <summary>
         /// UID information about the requesting user. See user.Info interface for details.
         /// </summary>
       public readonly string Uid;
@@ -13164,6 +13183,7 @@ namespace Pulumi.Kubernetes.Types.Outputs.Certificates
           ImmutableDictionary<string, ImmutableArray<string>> @extra,
           ImmutableArray<string> @groups,
           string @request,
+          string @signerName,
           string @uid,
           ImmutableArray<string> @usages,
           string @username)
@@ -13171,6 +13191,7 @@ namespace Pulumi.Kubernetes.Types.Outputs.Certificates
           this.Extra = @extra;
           this.Groups = @groups;
           this.Request = @request;
+          this.SignerName = @signerName;
           this.Uid = @uid;
           this.Usages = @usages;
           this.Username = @username;
@@ -14840,8 +14861,7 @@ namespace Pulumi.Kubernetes.Types.Outputs.Core
       public readonly bool Tty;
 
       /// <summary>
-        /// volumeDevices is the list of block devices to be used by the container. This is a beta
-        /// feature.
+        /// volumeDevices is the list of block devices to be used by the container.
         /// </summary>
       public readonly ImmutableArray<Core.V1.VolumeDevice> VolumeDevices;
 
@@ -15868,8 +15888,7 @@ namespace Pulumi.Kubernetes.Types.Outputs.Core
       public readonly bool Tty;
 
       /// <summary>
-        /// volumeDevices is the list of block devices to be used by the container. This is a beta
-        /// feature.
+        /// volumeDevices is the list of block devices to be used by the container.
         /// </summary>
       public readonly ImmutableArray<Core.V1.VolumeDevice> VolumeDevices;
 
@@ -18501,13 +18520,16 @@ namespace Pulumi.Kubernetes.Types.Outputs.Core
       public readonly ImmutableArray<string> AccessModes;
 
       /// <summary>
-        /// This field requires the VolumeSnapshotDataSource alpha feature gate to be enabled and
-        /// currently VolumeSnapshot is the only supported data source. If the provisioner can
-        /// support VolumeSnapshot data source, it will create a new volume and data will be
-        /// restored to the volume at the same time. If the provisioner does not support
-        /// VolumeSnapshot data source, volume will not be created and the failure will be reported
-        /// as an event. In the future, we plan to support more data source types and the behavior
-        /// of the provisioner may change.
+        /// This field can be used to specify either: * An existing VolumeSnapshot object
+        /// (snapshot.storage.k8s.io/VolumeSnapshot - Beta) * An existing PVC
+        /// (PersistentVolumeClaim) * An existing custom resource/object that implements data
+        /// population (Alpha) In order to use VolumeSnapshot object types, the appropriate feature
+        /// gate must be enabled (VolumeSnapshotDataSource or AnyVolumeDataSource) If the
+        /// provisioner or an external controller can support the specified data source, it will
+        /// create a new volume based on the contents of the specified data source. If the specified
+        /// data source is not supported, the volume will not be created and the failure will be
+        /// reported as an event. In the future, we plan to support more data source types and the
+        /// behavior of the provisioner may change.
         /// </summary>
       public readonly Core.V1.TypedLocalObjectReference DataSource;
 
@@ -18530,7 +18552,7 @@ namespace Pulumi.Kubernetes.Types.Outputs.Core
 
       /// <summary>
         /// volumeMode defines what type of volume is required by the claim. Value of Filesystem is
-        /// implied when not included in claim spec. This is a beta feature.
+        /// implied when not included in claim spec.
         /// </summary>
       public readonly string VolumeMode;
 
@@ -18861,7 +18883,6 @@ namespace Pulumi.Kubernetes.Types.Outputs.Core
       /// <summary>
         /// volumeMode defines if a volume is intended to be used with a formatted filesystem or to
         /// remain in raw block state. Value of Filesystem is implied when not included in spec.
-        /// This is a beta feature.
         /// </summary>
       public readonly string VolumeMode;
 
@@ -19398,6 +19419,15 @@ namespace Pulumi.Kubernetes.Types.Outputs.Core
       public readonly int FsGroup;
 
       /// <summary>
+        /// fsGroupChangePolicy defines behavior of changing ownership and permission of the volume
+        /// before being exposed inside Pod. This field will only apply to volume types which
+        /// support fsGroup based ownership(and permissions). It will have no effect on ephemeral
+        /// volume types such as: secret, configmaps and emptydir. Valid values are "OnRootMismatch"
+        /// and "Always". If not specified defaults to "Always".
+        /// </summary>
+      public readonly string FsGroupChangePolicy;
+
+      /// <summary>
         /// The GID to run the entrypoint of the container process. Uses runtime default if unset.
         /// May also be set in SecurityContext.  If set in both SecurityContext and
         /// PodSecurityContext, the value specified in SecurityContext takes precedence for that
@@ -19452,6 +19482,7 @@ namespace Pulumi.Kubernetes.Types.Outputs.Core
       [OutputConstructor]
       private PodSecurityContext(
           int @fsGroup,
+          string @fsGroupChangePolicy,
           int @runAsGroup,
           bool @runAsNonRoot,
           int @runAsUser,
@@ -19461,6 +19492,7 @@ namespace Pulumi.Kubernetes.Types.Outputs.Core
           Core.V1.WindowsSecurityContextOptions @windowsOptions)
       {
           this.FsGroup = @fsGroup;
+          this.FsGroupChangePolicy = @fsGroupChangePolicy;
           this.RunAsGroup = @runAsGroup;
           this.RunAsNonRoot = @runAsNonRoot;
           this.RunAsUser = @runAsUser;
@@ -22381,7 +22413,7 @@ namespace Pulumi.Kubernetes.Types.Outputs.Core
       public readonly string TimeAdded;
 
       /// <summary>
-        /// Required. The taint value corresponding to the taint key.
+        /// The taint value corresponding to the taint key.
         /// </summary>
       public readonly string Value;
 
@@ -23066,14 +23098,12 @@ namespace Pulumi.Kubernetes.Types.Outputs.Core
       /// <summary>
         /// GMSACredentialSpec is where the GMSA admission webhook
         /// (https://github.com/kubernetes-sigs/windows-gmsa) inlines the contents of the GMSA
-        /// credential spec named by the GMSACredentialSpecName field. This field is alpha-level and
-        /// is only honored by servers that enable the WindowsGMSA feature flag.
+        /// credential spec named by the GMSACredentialSpecName field.
         /// </summary>
       public readonly string GmsaCredentialSpec;
 
       /// <summary>
-        /// GMSACredentialSpecName is the name of the GMSA credential spec to use. This field is
-        /// alpha-level and is only honored by servers that enable the WindowsGMSA feature flag.
+        /// GMSACredentialSpecName is the name of the GMSA credential spec to use.
         /// </summary>
       public readonly string GmsaCredentialSpecName;
 
@@ -24428,7 +24458,7 @@ namespace Pulumi.Kubernetes.Types.Outputs.Extensions
 
     }
     /// <summary>
-    /// HTTPIngressPath associates a path regex with a backend. Incoming urls matching the path are
+    /// HTTPIngressPath associates a path with a backend. Incoming urls matching the path are
     /// forwarded to the backend.
     /// </summary>
     [OutputType]
@@ -24441,21 +24471,40 @@ namespace Pulumi.Kubernetes.Types.Outputs.Extensions
       public readonly Extensions.V1Beta1.IngressBackend Backend;
 
       /// <summary>
-        /// Path is an extended POSIX regex as defined by IEEE Std 1003.1, (i.e this follows the
-        /// egrep/unix syntax, not the perl syntax) matched against the path of an incoming request.
-        /// Currently it can contain characters disallowed from the conventional "path" part of a
-        /// URL as defined by RFC 3986. Paths must begin with a '/'. If unspecified, the path
-        /// defaults to a catch all sending traffic to the backend.
+        /// Path is matched against the path of an incoming request. Currently it can contain
+        /// characters disallowed from the conventional "path" part of a URL as defined by RFC 3986.
+        /// Paths must begin with a '/'. When unspecified, all paths from incoming requests are
+        /// matched.
         /// </summary>
       public readonly string Path;
+
+      /// <summary>
+        /// PathType determines the interpretation of the Path matching. PathType can be one of the
+        /// following values: * Exact: Matches the URL path exactly. * Prefix: Matches based on a
+        /// URL path prefix split by '/'. Matching is
+        ///   done on a path element by element basis. A path element refers is the
+        ///   list of labels in the path split by the '/' separator. A request is a
+        ///   match for path p if every p is an element-wise prefix of p of the
+        ///   request path. Note that if the last element of the path is a substring
+        ///   of the last element in request path, it is not a match (e.g. /foo/bar
+        ///   matches /foo/bar/baz, but does not match /foo/barbaz).
+        /// * ImplementationSpecific: Interpretation of the Path matching is up to
+        ///   the IngressClass. Implementations can treat this as a separate PathType
+        ///   or treat it identically to Prefix or Exact path types.
+        /// Implementations are required to support all path types. Defaults to
+        /// ImplementationSpecific.
+        /// </summary>
+      public readonly string PathType;
 
       [OutputConstructor]
       private HTTPIngressPath(
           Extensions.V1Beta1.IngressBackend @backend,
-          string @path)
+          string @path,
+          string @pathType)
       {
           this.Backend = @backend;
           this.Path = @path;
+          this.PathType = @pathType;
       }
 
     }
@@ -24634,6 +24683,12 @@ namespace Pulumi.Kubernetes.Types.Outputs.Extensions
     public sealed class IngressBackend
     {
       /// <summary>
+        /// Resource is an ObjectRef to another Kubernetes resource in the namespace of the Ingress
+        /// object. If resource is specified, serviceName and servicePort must not be specified.
+        /// </summary>
+      public readonly Core.V1.TypedLocalObjectReference Resource;
+
+      /// <summary>
         /// Specifies the name of the referenced service.
         /// </summary>
       public readonly string ServiceName;
@@ -24645,9 +24700,11 @@ namespace Pulumi.Kubernetes.Types.Outputs.Extensions
 
       [OutputConstructor]
       private IngressBackend(
+          Core.V1.TypedLocalObjectReference @resource,
           string @serviceName,
           Union<int,string> @servicePort)
       {
+          this.Resource = @resource;
           this.ServiceName = @serviceName;
           this.ServicePort = @servicePort;
       }
@@ -24710,15 +24767,25 @@ namespace Pulumi.Kubernetes.Types.Outputs.Extensions
     {
       /// <summary>
         /// Host is the fully qualified domain name of a network host, as defined by RFC 3986. Note
-        /// the following deviations from the "host" part of the URI as defined in the RFC: 1. IPs
-        /// are not allowed. Currently an IngressRuleValue can only apply to the
-        /// 	  IP in the Spec of the parent Ingress.
+        /// the following deviations from the "host" part of the URI as defined in RFC 3986: 1. IPs
+        /// are not allowed. Currently an IngressRuleValue can only apply to
+        ///    the IP in the Spec of the parent Ingress.
         /// 2. The `:` delimiter is not respected because ports are not allowed.
         /// 	  Currently the port of an Ingress is implicitly :80 for http and
         /// 	  :443 for https.
         /// Both these may change in the future. Incoming requests are matched against the host
         /// before the IngressRuleValue. If the host is unspecified, the Ingress routes all traffic
         /// based on the specified IngressRuleValue.
+        /// 
+        /// Host can be "precise" which is a domain name without the terminating dot of a network
+        /// host (e.g. "foo.bar.com") or "wildcard", which is a domain name prefixed with a single
+        /// wildcard label (e.g. "*.foo.com"). The wildcard character '*' must appear by itself as
+        /// the first DNS label and matches only a single label. You cannot have a wildcard label by
+        /// itself (e.g. Host == "*"). Requests will be matched against the Host field in the
+        /// following way: 1. If Host is precise, the request matches this rule if the http host
+        /// header is equal to Host. 2. If Host is a wildcard, then the request matches this rule if
+        /// the http host header is to equal to the suffix (removing the first label) of the
+        /// wildcard rule.
         /// </summary>
       public readonly string Host;
 
@@ -24749,6 +24816,18 @@ namespace Pulumi.Kubernetes.Types.Outputs.Extensions
       public readonly Extensions.V1Beta1.IngressBackend Backend;
 
       /// <summary>
+        /// IngressClassName is the name of the IngressClass cluster resource. The associated
+        /// IngressClass defines which controller will implement the resource. This replaces the
+        /// deprecated `kubernetes.io/ingress.class` annotation. For backwards compatibility, when
+        /// that annotation is set, it must be given precedence over this field. The controller may
+        /// emit a warning if the field and annotation have different values. Implementations of
+        /// this API should ignore Ingresses without a class specified. An IngressClass resource may
+        /// be marked as default, which can be used to set a default value for this field. For more
+        /// information, refer to the IngressClass documentation.
+        /// </summary>
+      public readonly string IngressClassName;
+
+      /// <summary>
         /// A list of host rules used to configure the Ingress. If unspecified, or no rule matches,
         /// all traffic is sent to the default backend.
         /// </summary>
@@ -24765,10 +24844,12 @@ namespace Pulumi.Kubernetes.Types.Outputs.Extensions
       [OutputConstructor]
       private IngressSpec(
           Extensions.V1Beta1.IngressBackend @backend,
+          string @ingressClassName,
           ImmutableArray<Extensions.V1Beta1.IngressRule> @rules,
           ImmutableArray<Extensions.V1Beta1.IngressTLS> @tls)
       {
           this.Backend = @backend;
+          this.IngressClassName = @ingressClassName;
           this.Rules = @rules;
           this.Tls = @tls;
       }
@@ -28381,7 +28462,7 @@ namespace Pulumi.Kubernetes.Types.Outputs.Networking
   namespace V1Beta1
   {
     /// <summary>
-    /// HTTPIngressPath associates a path regex with a backend. Incoming urls matching the path are
+    /// HTTPIngressPath associates a path with a backend. Incoming urls matching the path are
     /// forwarded to the backend.
     /// </summary>
     [OutputType]
@@ -28394,21 +28475,40 @@ namespace Pulumi.Kubernetes.Types.Outputs.Networking
       public readonly Networking.V1Beta1.IngressBackend Backend;
 
       /// <summary>
-        /// Path is an extended POSIX regex as defined by IEEE Std 1003.1, (i.e this follows the
-        /// egrep/unix syntax, not the perl syntax) matched against the path of an incoming request.
-        /// Currently it can contain characters disallowed from the conventional "path" part of a
-        /// URL as defined by RFC 3986. Paths must begin with a '/'. If unspecified, the path
-        /// defaults to a catch all sending traffic to the backend.
+        /// Path is matched against the path of an incoming request. Currently it can contain
+        /// characters disallowed from the conventional "path" part of a URL as defined by RFC 3986.
+        /// Paths must begin with a '/'. When unspecified, all paths from incoming requests are
+        /// matched.
         /// </summary>
       public readonly string Path;
+
+      /// <summary>
+        /// PathType determines the interpretation of the Path matching. PathType can be one of the
+        /// following values: * Exact: Matches the URL path exactly. * Prefix: Matches based on a
+        /// URL path prefix split by '/'. Matching is
+        ///   done on a path element by element basis. A path element refers is the
+        ///   list of labels in the path split by the '/' separator. A request is a
+        ///   match for path p if every p is an element-wise prefix of p of the
+        ///   request path. Note that if the last element of the path is a substring
+        ///   of the last element in request path, it is not a match (e.g. /foo/bar
+        ///   matches /foo/bar/baz, but does not match /foo/barbaz).
+        /// * ImplementationSpecific: Interpretation of the Path matching is up to
+        ///   the IngressClass. Implementations can treat this as a separate PathType
+        ///   or treat it identically to Prefix or Exact path types.
+        /// Implementations are required to support all path types. Defaults to
+        /// ImplementationSpecific.
+        /// </summary>
+      public readonly string PathType;
 
       [OutputConstructor]
       private HTTPIngressPath(
           Networking.V1Beta1.IngressBackend @backend,
-          string @path)
+          string @path,
+          string @pathType)
       {
           this.Backend = @backend;
           this.Path = @path;
+          this.PathType = @pathType;
       }
 
     }
@@ -28499,6 +28599,12 @@ namespace Pulumi.Kubernetes.Types.Outputs.Networking
     public sealed class IngressBackend
     {
       /// <summary>
+        /// Resource is an ObjectRef to another Kubernetes resource in the namespace of the Ingress
+        /// object. If resource is specified, serviceName and servicePort must not be specified.
+        /// </summary>
+      public readonly Core.V1.TypedLocalObjectReference Resource;
+
+      /// <summary>
         /// Specifies the name of the referenced service.
         /// </summary>
       public readonly string ServiceName;
@@ -28510,11 +28616,144 @@ namespace Pulumi.Kubernetes.Types.Outputs.Networking
 
       [OutputConstructor]
       private IngressBackend(
+          Core.V1.TypedLocalObjectReference @resource,
           string @serviceName,
           Union<int,string> @servicePort)
       {
+          this.Resource = @resource;
           this.ServiceName = @serviceName;
           this.ServicePort = @servicePort;
+      }
+
+    }
+    /// <summary>
+    /// IngressClass represents the class of the Ingress, referenced by the Ingress Spec. The
+    /// `ingressclass.kubernetes.io/is-default-class` annotation can be used to indicate that an
+    /// IngressClass should be considered default. When a single IngressClass resource has this
+    /// annotation set to true, new Ingress resources without a class specified will be assigned
+    /// this default class.
+    /// </summary>
+    [OutputType]
+    public sealed class IngressClass
+    {
+      /// <summary>
+        /// APIVersion defines the versioned schema of this representation of an object. Servers
+        /// should convert recognized schemas to the latest internal value, and may reject
+        /// unrecognized values. More info:
+        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+        /// </summary>
+      public readonly string ApiVersion;
+
+      /// <summary>
+        /// Kind is a string value representing the REST resource this object represents. Servers
+        /// may infer this from the endpoint the client submits requests to. Cannot be updated. In
+        /// CamelCase. More info:
+        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+        /// </summary>
+      public readonly string Kind;
+
+      /// <summary>
+        /// Standard object's metadata. More info:
+        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+        /// </summary>
+      public readonly Meta.V1.ObjectMeta Metadata;
+
+      /// <summary>
+        /// Spec is the desired state of the IngressClass. More info:
+        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+        /// </summary>
+      public readonly Networking.V1Beta1.IngressClassSpec Spec;
+
+      [OutputConstructor]
+      private IngressClass(
+          string @apiVersion,
+          string @kind,
+          Meta.V1.ObjectMeta @metadata,
+          Networking.V1Beta1.IngressClassSpec @spec)
+      {
+          this.ApiVersion = @apiVersion;
+          this.Kind = @kind;
+          this.Metadata = @metadata;
+          this.Spec = @spec;
+      }
+
+    }
+    /// <summary>
+    /// IngressClassList is a collection of IngressClasses.
+    /// </summary>
+    [OutputType]
+    public sealed class IngressClassList
+    {
+      /// <summary>
+        /// APIVersion defines the versioned schema of this representation of an object. Servers
+        /// should convert recognized schemas to the latest internal value, and may reject
+        /// unrecognized values. More info:
+        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+        /// </summary>
+      public readonly string ApiVersion;
+
+      /// <summary>
+        /// Items is the list of IngressClasses.
+        /// </summary>
+      public readonly ImmutableArray<Networking.V1Beta1.IngressClass> Items;
+
+      /// <summary>
+        /// Kind is a string value representing the REST resource this object represents. Servers
+        /// may infer this from the endpoint the client submits requests to. Cannot be updated. In
+        /// CamelCase. More info:
+        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+        /// </summary>
+      public readonly string Kind;
+
+      /// <summary>
+        /// Standard list metadata.
+        /// </summary>
+      public readonly Meta.V1.ListMeta Metadata;
+
+      [OutputConstructor]
+      private IngressClassList(
+          string @apiVersion,
+          ImmutableArray<Networking.V1Beta1.IngressClass> @items,
+          string @kind,
+          Meta.V1.ListMeta @metadata)
+      {
+          this.ApiVersion = @apiVersion;
+          this.Items = @items;
+          this.Kind = @kind;
+          this.Metadata = @metadata;
+      }
+
+    }
+    /// <summary>
+    /// IngressClassSpec provides information about the class of an Ingress.
+    /// </summary>
+    [OutputType]
+    public sealed class IngressClassSpec
+    {
+      /// <summary>
+        /// Controller refers to the name of the controller that should handle this class. This
+        /// allows for different "flavors" that are controlled by the same controller. For example,
+        /// you may have different Parameters for the same implementing controller. This should be
+        /// specified as a domain-prefixed path no more than 250 characters in length, e.g.
+        /// "acme.io/ingress-controller". This field is immutable.
+        /// </summary>
+      public readonly string Controller;
+
+      /// <summary>
+        /// Parameters is a link to a resource containing additional configuration for the
+        /// controller. This is optional if the controller does not require extra parameters.
+        /// Example configuration resources include `core.ConfigMap` or a controller specific Custom
+        /// Resource.
+        /// </summary>
+      public readonly Core.V1.TypedLocalObjectReference Parameters;
+
+      [OutputConstructor]
+      private IngressClassSpec(
+          string @controller,
+          Core.V1.TypedLocalObjectReference @parameters)
+      {
+          this.Controller = @controller;
+          this.Parameters = @parameters;
       }
 
     }
@@ -28575,15 +28814,25 @@ namespace Pulumi.Kubernetes.Types.Outputs.Networking
     {
       /// <summary>
         /// Host is the fully qualified domain name of a network host, as defined by RFC 3986. Note
-        /// the following deviations from the "host" part of the URI as defined in the RFC: 1. IPs
-        /// are not allowed. Currently an IngressRuleValue can only apply to the
-        /// 	  IP in the Spec of the parent Ingress.
+        /// the following deviations from the "host" part of the URI as defined in RFC 3986: 1. IPs
+        /// are not allowed. Currently an IngressRuleValue can only apply to
+        ///    the IP in the Spec of the parent Ingress.
         /// 2. The `:` delimiter is not respected because ports are not allowed.
         /// 	  Currently the port of an Ingress is implicitly :80 for http and
         /// 	  :443 for https.
         /// Both these may change in the future. Incoming requests are matched against the host
         /// before the IngressRuleValue. If the host is unspecified, the Ingress routes all traffic
         /// based on the specified IngressRuleValue.
+        /// 
+        /// Host can be "precise" which is a domain name without the terminating dot of a network
+        /// host (e.g. "foo.bar.com") or "wildcard", which is a domain name prefixed with a single
+        /// wildcard label (e.g. "*.foo.com"). The wildcard character '*' must appear by itself as
+        /// the first DNS label and matches only a single label. You cannot have a wildcard label by
+        /// itself (e.g. Host == "*"). Requests will be matched against the Host field in the
+        /// following way: 1. If Host is precise, the request matches this rule if the http host
+        /// header is equal to Host. 2. If Host is a wildcard, then the request matches this rule if
+        /// the http host header is to equal to the suffix (removing the first label) of the
+        /// wildcard rule.
         /// </summary>
       public readonly string Host;
 
@@ -28614,6 +28863,18 @@ namespace Pulumi.Kubernetes.Types.Outputs.Networking
       public readonly Networking.V1Beta1.IngressBackend Backend;
 
       /// <summary>
+        /// IngressClassName is the name of the IngressClass cluster resource. The associated
+        /// IngressClass defines which controller will implement the resource. This replaces the
+        /// deprecated `kubernetes.io/ingress.class` annotation. For backwards compatibility, when
+        /// that annotation is set, it must be given precedence over this field. The controller may
+        /// emit a warning if the field and annotation have different values. Implementations of
+        /// this API should ignore Ingresses without a class specified. An IngressClass resource may
+        /// be marked as default, which can be used to set a default value for this field. For more
+        /// information, refer to the IngressClass documentation.
+        /// </summary>
+      public readonly string IngressClassName;
+
+      /// <summary>
         /// A list of host rules used to configure the Ingress. If unspecified, or no rule matches,
         /// all traffic is sent to the default backend.
         /// </summary>
@@ -28630,10 +28891,12 @@ namespace Pulumi.Kubernetes.Types.Outputs.Networking
       [OutputConstructor]
       private IngressSpec(
           Networking.V1Beta1.IngressBackend @backend,
+          string @ingressClassName,
           ImmutableArray<Networking.V1Beta1.IngressRule> @rules,
           ImmutableArray<Networking.V1Beta1.IngressTLS> @tls)
       {
           this.Backend = @backend;
+          this.IngressClassName = @ingressClassName;
           this.Rules = @rules;
           this.Tls = @tls;
       }
@@ -28672,10 +28935,10 @@ namespace Pulumi.Kubernetes.Types.Outputs.Networking
       public readonly ImmutableArray<string> Hosts;
 
       /// <summary>
-        /// SecretName is the name of the secret used to terminate SSL traffic on 443. Field is left
-        /// optional to allow SSL routing based on SNI hostname alone. If the SNI host in a listener
-        /// conflicts with the "Host" header field used by an IngressRule, the SNI host is used for
-        /// termination and value of the Host header is used for routing.
+        /// SecretName is the name of the secret used to terminate TLS traffic on port 443. Field is
+        /// left optional to allow TLS routing based on SNI hostname alone. If the SNI host in a
+        /// listener conflicts with the "Host" header field used by an IngressRule, the SNI host is
+        /// used for termination and value of the Host header is used for routing.
         /// </summary>
       public readonly string SecretName;
 
@@ -32255,6 +32518,174 @@ namespace Pulumi.Kubernetes.Types.Outputs.Storage
 {
   namespace V1
   {
+    /// <summary>
+    /// CSIDriver captures information about a Container Storage Interface (CSI) volume driver
+    /// deployed on the cluster. Kubernetes attach detach controller uses this object to determine
+    /// whether attach is required. Kubelet uses this object to determine whether pod information
+    /// needs to be passed on mount. CSIDriver objects are non-namespaced.
+    /// </summary>
+    [OutputType]
+    public sealed class CSIDriver
+    {
+      /// <summary>
+        /// APIVersion defines the versioned schema of this representation of an object. Servers
+        /// should convert recognized schemas to the latest internal value, and may reject
+        /// unrecognized values. More info:
+        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+        /// </summary>
+      public readonly string ApiVersion;
+
+      /// <summary>
+        /// Kind is a string value representing the REST resource this object represents. Servers
+        /// may infer this from the endpoint the client submits requests to. Cannot be updated. In
+        /// CamelCase. More info:
+        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+        /// </summary>
+      public readonly string Kind;
+
+      /// <summary>
+        /// Standard object metadata. metadata.Name indicates the name of the CSI driver that this
+        /// object refers to; it MUST be the same name returned by the CSI GetPluginName() call for
+        /// that driver. The driver name must be 63 characters or less, beginning and ending with an
+        /// alphanumeric character ([a-z0-9A-Z]) with dashes (-), dots (.), and alphanumerics
+        /// between. More info:
+        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+        /// </summary>
+      public readonly Meta.V1.ObjectMeta Metadata;
+
+      /// <summary>
+        /// Specification of the CSI Driver.
+        /// </summary>
+      public readonly Storage.V1.CSIDriverSpec Spec;
+
+      [OutputConstructor]
+      private CSIDriver(
+          string @apiVersion,
+          string @kind,
+          Meta.V1.ObjectMeta @metadata,
+          Storage.V1.CSIDriverSpec @spec)
+      {
+          this.ApiVersion = @apiVersion;
+          this.Kind = @kind;
+          this.Metadata = @metadata;
+          this.Spec = @spec;
+      }
+
+    }
+    /// <summary>
+    /// CSIDriverList is a collection of CSIDriver objects.
+    /// </summary>
+    [OutputType]
+    public sealed class CSIDriverList
+    {
+      /// <summary>
+        /// APIVersion defines the versioned schema of this representation of an object. Servers
+        /// should convert recognized schemas to the latest internal value, and may reject
+        /// unrecognized values. More info:
+        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+        /// </summary>
+      public readonly string ApiVersion;
+
+      /// <summary>
+        /// items is the list of CSIDriver
+        /// </summary>
+      public readonly ImmutableArray<Storage.V1.CSIDriver> Items;
+
+      /// <summary>
+        /// Kind is a string value representing the REST resource this object represents. Servers
+        /// may infer this from the endpoint the client submits requests to. Cannot be updated. In
+        /// CamelCase. More info:
+        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+        /// </summary>
+      public readonly string Kind;
+
+      /// <summary>
+        /// Standard list metadata More info:
+        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+        /// </summary>
+      public readonly Meta.V1.ListMeta Metadata;
+
+      [OutputConstructor]
+      private CSIDriverList(
+          string @apiVersion,
+          ImmutableArray<Storage.V1.CSIDriver> @items,
+          string @kind,
+          Meta.V1.ListMeta @metadata)
+      {
+          this.ApiVersion = @apiVersion;
+          this.Items = @items;
+          this.Kind = @kind;
+          this.Metadata = @metadata;
+      }
+
+    }
+    /// <summary>
+    /// CSIDriverSpec is the specification of a CSIDriver.
+    /// </summary>
+    [OutputType]
+    public sealed class CSIDriverSpec
+    {
+      /// <summary>
+        /// attachRequired indicates this CSI volume driver requires an attach operation (because it
+        /// implements the CSI ControllerPublishVolume() method), and that the Kubernetes attach
+        /// detach controller should call the attach volume interface which checks the
+        /// volumeattachment status and waits until the volume is attached before proceeding to
+        /// mounting. The CSI external-attacher coordinates with CSI volume driver and updates the
+        /// volumeattachment status when the attach operation is complete. If the CSIDriverRegistry
+        /// feature gate is enabled and the value is specified to false, the attach operation will
+        /// be skipped. Otherwise the attach operation will be called.
+        /// </summary>
+      public readonly bool AttachRequired;
+
+      /// <summary>
+        /// If set to true, podInfoOnMount indicates this CSI volume driver requires additional pod
+        /// information (like podName, podUID, etc.) during mount operations. If set to false, pod
+        /// information will not be passed on mount. Default is false. The CSI driver specifies
+        /// podInfoOnMount as part of driver deployment. If true, Kubelet will pass pod information
+        /// as VolumeContext in the CSI NodePublishVolume() calls. The CSI driver is responsible for
+        /// parsing and validating the information passed in as VolumeContext. The following
+        /// VolumeConext will be passed if podInfoOnMount is set to true. This list might grow, but
+        /// the prefix will be used. "csi.storage.k8s.io/pod.name": pod.Name
+        /// "csi.storage.k8s.io/pod.namespace": pod.Namespace "csi.storage.k8s.io/pod.uid":
+        /// string(pod.UID) "csi.storage.k8s.io/ephemeral": "true" iff the volume is an ephemeral
+        /// inline volume
+        ///                                 defined by a CSIVolumeSource, otherwise "false"
+        /// 
+        /// "csi.storage.k8s.io/ephemeral" is a new feature in Kubernetes 1.16. It is only required
+        /// for drivers which support both the "Persistent" and "Ephemeral" VolumeLifecycleMode.
+        /// Other drivers can leave pod info disabled and/or ignore this field. As Kubernetes 1.15
+        /// doesn't support this field, drivers can only support one mode when deployed on such a
+        /// cluster and the deployment determines which mode that is, for example via a command line
+        /// parameter of the driver.
+        /// </summary>
+      public readonly bool PodInfoOnMount;
+
+      /// <summary>
+        /// volumeLifecycleModes defines what kind of volumes this CSI volume driver supports. The
+        /// default if the list is empty is "Persistent", which is the usage defined by the CSI
+        /// specification and implemented in Kubernetes via the usual PV/PVC mechanism. The other
+        /// mode is "Ephemeral". In this mode, volumes are defined inline inside the pod spec with
+        /// CSIVolumeSource and their lifecycle is tied to the lifecycle of that pod. A driver has
+        /// to be aware of this because it is only going to get a NodePublishVolume call for such a
+        /// volume. For more information about implementing this mode, see
+        /// https://kubernetes-csi.github.io/docs/ephemeral-local-volumes.html A driver can support
+        /// one or more of these modes and more modes may be added in the future. This field is
+        /// beta.
+        /// </summary>
+      public readonly ImmutableArray<string> VolumeLifecycleModes;
+
+      [OutputConstructor]
+      private CSIDriverSpec(
+          bool @attachRequired,
+          bool @podInfoOnMount,
+          ImmutableArray<string> @volumeLifecycleModes)
+      {
+          this.AttachRequired = @attachRequired;
+          this.PodInfoOnMount = @podInfoOnMount;
+          this.VolumeLifecycleModes = @volumeLifecycleModes;
+      }
+
+    }
     /// <summary>
     /// CSINode holds information about all CSI drivers installed on a node. CSI drivers do not need
     /// to create the CSINode object directly. As long as they use the node-driver-registrar sidecar
