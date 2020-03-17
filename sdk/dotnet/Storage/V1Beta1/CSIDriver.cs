@@ -80,7 +80,15 @@ namespace Pulumi.Kubernetes.Storage.V1Beta1
 
         private static CustomResourceOptions? MakeOptions(CustomResourceOptions? options)
         {
-            return options;
+            var extraOptions = new CustomResourceOptions
+            {
+                Aliases =
+                {
+                    new Alias { Type = "kubernetes:storage.k8s.io/v1:CSIDriver" },
+                }
+            };
+
+            return CustomResourceOptions.Merge(options, extraOptions);
         }
 
         /// <summary>

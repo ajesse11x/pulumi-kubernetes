@@ -20872,9 +20872,8 @@ export namespace networking {
       controller?: pulumi.Input<string>
 
       /**
-       * Parameters is a link to a resource containing additional configuration for the controller.
-       * This is optional if the controller does not require extra parameters. Example configuration
-       * resources include `core.ConfigMap` or a controller specific Custom Resource.
+       * Parameters is a link to a custom resource containing additional configuration for the
+       * controller. This is optional if the controller does not require extra parameters.
        */
       parameters?: pulumi.Input<core.v1.TypedLocalObjectReference>
 

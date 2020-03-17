@@ -25293,10 +25293,8 @@ namespace Pulumi.Kubernetes.Types.Inputs.Networking
         public Input<string>? Controller { get; set; }
 
         /// <summary>
-        /// Parameters is a link to a resource containing additional configuration for the
+        /// Parameters is a link to a custom resource containing additional configuration for the
         /// controller. This is optional if the controller does not require extra parameters.
-        /// Example configuration resources include `core.ConfigMap` or a controller specific Custom
-        /// Resource.
         /// </summary>
         [Input("parameters")]
         public Input<Core.V1.TypedLocalObjectReferenceArgs>? Parameters { get; set; }

@@ -56,7 +56,7 @@ namespace Pulumi.Kubernetes.Networking.V1Beta1
         /// <param name="args">The arguments used to populate this resource's properties</param>
         /// <param name="options">A bag of options that control this resource's behavior</param>
         public IngressClass(string name, Types.Inputs.Networking.V1Beta1.IngressClassArgs? args = null, CustomResourceOptions? options = null)
-            : base("kubernetes:networking.k8s.io/v1beta1:IngressClass", name, SetAPIKindAndVersion(args), options)
+            : base("kubernetes:networking.k8s.io/v1beta1:IngressClass", name, SetAPIKindAndVersion(args), MakeOptions(options))
         {
         }
 
@@ -73,6 +73,11 @@ namespace Pulumi.Kubernetes.Networking.V1Beta1
             return args;
         }
 
+        private static CustomResourceOptions? MakeOptions(CustomResourceOptions? options)
+        {
+            return options;
+        }
+
         /// <summary>
         /// Get an existing IngressClass resource's state with the given name and ID.
         /// </summary>
@@ -84,6 +89,5 @@ namespace Pulumi.Kubernetes.Networking.V1Beta1
             return new IngressClass(name, default(Types.Inputs.Networking.V1Beta1.IngressClassArgs),
                 CustomResourceOptions.Merge(options, new CustomResourceOptions {Id = id}));
         }
-
     }
 }

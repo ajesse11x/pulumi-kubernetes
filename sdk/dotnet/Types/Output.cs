@@ -28740,10 +28740,8 @@ namespace Pulumi.Kubernetes.Types.Outputs.Networking
       public readonly string Controller;
 
       /// <summary>
-        /// Parameters is a link to a resource containing additional configuration for the
+        /// Parameters is a link to a custom resource containing additional configuration for the
         /// controller. This is optional if the controller does not require extra parameters.
-        /// Example configuration resources include `core.ConfigMap` or a controller specific Custom
-        /// Resource.
         /// </summary>
       public readonly Core.V1.TypedLocalObjectReference Parameters;
 
