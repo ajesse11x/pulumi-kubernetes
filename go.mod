@@ -26,4 +26,6 @@ require (
 
 replace github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.3.1+incompatible
 
-replace github.com/pulumi/pulumi => /Users/levi/go/src/github.com/pulumi/pulumi
+// Temporarily pin to this commit to support schema-based Go SDK generation.
+// Can remove this and update the pulumi/pulumi module requirement once v1.12.2 is released.
+replace github.com/pulumi/pulumi => github.com/pulumi/pulumi v1.12.2-0.20200317200943-655839009a98
