@@ -11,7 +11,6 @@ require (
 	github.com/golang/protobuf v1.3.2
 	github.com/googleapis/gnostic v0.2.0
 	github.com/imdario/mergo v0.3.8
-	github.com/jinzhu/copier v0.0.0-20180308034124-7e38e58719c3
 	github.com/mitchellh/go-wordwrap v1.0.0
 	github.com/pkg/errors v0.8.1
 	github.com/pulumi/pulumi v1.10.0
